@@ -1,7 +1,7 @@
 from socket import *
 from threading import *
-from tkinter import *
-from tkinter import messagebox
+from Cashier import *
+from Manager import *
 
 
 HOST = "127.0.0.1"
