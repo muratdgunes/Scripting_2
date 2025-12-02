@@ -16,7 +16,6 @@ with open("users.txt", "r", encoding="utf-8") as file:
             password = spot.group(2)
             role = spot.group(3) # parse the read user line.
             userDictionary[name] = {"password": password, "role": role}
-            print(userDictionary)
 
 
 class ClientThread(Thread):
@@ -24,18 +23,30 @@ class ClientThread(Thread):
         Thread.__init__(self)
         self.clientsocket = clientsocket
         self.clientaddress = clientaddress
+        msg = "connectionsuccess".encode()
+        self.clientsocket.send(msg)
         print("Connection From ", clientaddress)
 
     def run(self):
-        msg = "Welcome".encode()
-        self.clientsocket.send(msg)
+        print("THread started")
         count = 0
         while True:
             data = self.clientsocket.recv(1024).decode()
             print(data)
             count+=1
-            if count ==3:
-                break       # thread'in ne yapacağına sonra karar veririz şimdilik dursun
+            parsed_data = data.split(";")
+            print(parsed_data)
+            if parsed_data[0] == "login":
+                if parsed_data[1] in userDictionary:
+                    msg = f"loginsuccess;{parsed_data[1]};{userDictionary[parsed_data[1]]["role"]}".encode()
+                    self.clientsocket.send(msg)
+                else:
+                    msg = "loginfailure".encode()
+                    self.clientsocket.send(msg)
+
+            elif parsed_data[0] == "transaction":
+                print("at transaction.")
+
 
         self.clientsocket.close()
 
@@ -77,7 +88,6 @@ class Login(Frame):
         self.mainEntry1.grid(row=1, column=1, columnspan=3, sticky=W, ipady=3,ipadx=52, padx=1)
 
 
-
         self.button = Button(self, text="Login", command = self.calculate)
         self.button.grid(row=3, column=1, padx=(5,50), ipadx=35, sticky=N+E, pady=(0,50))
 
@@ -101,9 +111,9 @@ class Login(Frame):
 
 
 
-c = Login()
-c.master.geometry("395x210")
-c.mainloop()
+#c = Login()
+#c.master.geometry("395x210")
+#c.mainloop()
 
 HOST = "127.0.0.1"
 
@@ -121,13 +131,8 @@ count =0
 
 
 while True:
-    if "john" in userDictionary:
-        print(userDictionary["john"]["password"])
-    count+=1
-    if count==3:
-        break
-    #server.listen()
-    #clientsocket, clientaddress = server.accept()
-    #newThread = ClientThread(clientsocket, clientaddress)
-    #newThread.start()
+    server.listen()
+    clientsocket, clientaddress = server.accept()
+    newThread = ClientThread(clientsocket, clientaddress)
+    newThread.start()
 
