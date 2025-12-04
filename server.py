@@ -4,7 +4,6 @@ from tkinter import *
 from tkinter import messagebox
 import re
 
-
 userDictionary={}
 with open("users.txt", "r", encoding="utf-8") as file:
     for line in file:
@@ -47,73 +46,127 @@ class ClientThread(Thread):
             elif parsed_data[0] == "transaction":
                 print("at transaction.")
 
+            elif parsed_data[0] == "addbook":
 
-        self.clientsocket.close()
+                book_id = parsed_data[1]
+                title = parsed_data[2]
+                authors = parsed_data[3] 
+                genre = parsed_data[4]
+                price = parsed_data[5]
+                quantity =parsed_data[6]
 
+                with open("inventory.txt","a", encoding="utf-8") as file:
+                    file.write(f"\n{book_id};{title};{authors};{genre};{price};{quantity}")
+            
+                clientsocket.send("addbookconfirmation".encode())
+   
+            elif parsed_data[0] == "updatequantity":
+                book_id = parsed_data[1]
+                new_quantitiy = parsed_data[2]
 
-class Login(Frame):
-    def __init__(self):
-        Frame.__init__(self)
-        self.master.title('Login')  # title koymak için
+                updated_line = []
+                found = False
 
+                with open("inventory.txt","r", encoding="utf-8") as file:
+                    for line in file:
+                        fields = line.strip().split(";")
 
-        # expandable
-        self.master.rowconfigure(0, weight=1) # if it is non zero value it will be expandable
-        self.master.columnconfigure(0, weight=1)
+                        if(fields[0]==book_id):
+                            fields[5] = str(int(fields[5]) + int(new_quantitiy))
+                            found = True
 
+                        updated_line.append(";".join(fields))
+                with open("inventory.txt","w", encoding="utf-8") as file:
+                    index = 0
+                    total = len(updated_line)
+                    for line in updated_line:
+                        if index<total -1:
+                            file.write(line + "\n")
+                        else:
+                            file.write(line)
+                        index +=1
 
-        for i in range(0,3):
-            self.rowconfigure(i, weight=1) # we will have just 1 row. Make it expandable
-
-
-
-        for j in range(0,2):
-            self.columnconfigure(j, weight=1) # we have 3 columns, it is to make them expandable
-
-        self.grid(sticky=W + E + N + S) # fill until the walls, have padding 20px everywhere
-
-
-        self.label = Label(self, text="Username:")
-        self.label.grid(row=0, column=0, sticky=E+W+S,pady=20) #username
-
-        self.mainEntry = Entry(self, justify=LEFT)
-        self.mainEntry.grid(row=0, column=1, columnspan=3, sticky=W+S,ipady=3,ipadx=52, padx=1,pady=20) #username entry box.
-
-
-
-        self.label2 = Label(self, text="Password:")
-        self.label2.grid(row=1, column=0, sticky=E+W)
-
-        self.mainEntry1 = Entry(self, justify=LEFT)
-        self.mainEntry1.grid(row=1, column=1, columnspan=3, sticky=W, ipady=3,ipadx=52, padx=1)
-
-
-        self.button = Button(self, text="Login", command = self.calculate)
-        self.button.grid(row=3, column=1, padx=(5,50), ipadx=35, sticky=N+E, pady=(0,50))
-
-    def calculate(self):
-        uName = self.mainEntry.get()
-        uPassword = self.mainEntry1.get()
-
-        self.mainEntry.delete(0, END)
-        self.mainEntry1.delete(0,END)
-
-        if uName in userDictionary:
-            if userDictionary[uName]["password"]==uPassword:
-                messagebox.showinfo(f"Login Successful!", f"Welcome {uName}")
-
-            else:
-                messagebox.showinfo(f"Login Failed!", f"Password is wrong, try again...")
-
-        else:
-            messagebox.showinfo(f"Login Failed!", f"There is no user named \"{uName}\"")
+                if found:
+                    clientsocket.send("updatequantityconfirmation".encode())
+                else:
+                    clientsocket.send("updatequantityfailed".encode())
 
 
+            
+            elif parsed_data[0] == "report1":
+                results = ClientThread.compute_top_selling_author()
+                reponse ="report1;" + ";".join(results)
+                clientsocket.send(reponse.encode())
+            elif parsed_data[0] == "report2":
+                results = ClientThread.compute_most_profitable_genre()
+                clientsocket.send(("report2;"+ ";".join(results)).encode())
+            elif parsed_data[0] == "report3":
+                results = ClientThread.compute_busiest_cashier()
+                clientsocket.send(("report3;"+";".join(results)).encode())
+        
+            elif parsed_data[0] == "Close":
+                self.clientsocket.close()
+                break
 
 
-#c = Login()
-#c.master.geometry("395x210")
-#c.mainloop()
+    def load_inventory():
+        inv = {}  # bookid → authors
+        with open("inventory.txt", "r", encoding="utf-8") as file:
+            for line in file:
+                fields = line.strip().split(";")
+                bookid = fields[0]
+                authors = fields[2]
+                inv[bookid] = authors
+        return inv
+
+
+    def compute_top_selling_author():
+        inventory = ClientThread.load_inventory()
+        book_to_authors ={}
+        with open("transactions.txt", "r", encoding="utf-8") as file:
+            for line in file:
+                parts = line.strip().split(";")
+
+                for item in parts[4:]:
+                    bookid, quantity = item.split("-")
+                    quantity = int(quantity)
+
+                    if bookid in inventory:
+                        authors_key = inventory[bookid]
+                        author = authors_key.split(" and ")
+
+                    for a in author:
+                        book_to_authors[a] = book_to_authors.get(a,0) + quantity
+        Top_sell = max(book_to_authors.values())
+        result = [a for a in book_to_authors if book_to_authors[a] == Top_sell]
+        return result
+
+    
+    def compute_most_profitable_genre():
+            book_info = {}
+
+    def compute_busiest_cashier():
+
+        cashier_counts = {}  
+
+        with open("transactions.txt", "r", encoding="utf-8") as file:
+            for line in file:
+                parts = line.strip().split(";")
+                cashier = parts[0]
+                cashier_counts[cashier] = cashier_counts.get(cashier, 0) + 1 #I got help here from chat gpt and I learnt that notation which is cashier_counts.get(cashier, 0) + 1
+
+        busiest = max(cashier_counts.values())
+        result = [c for c in cashier_counts if cashier_counts[c] == busiest]
+
+        return result
+
+
+
+
+
+
+
+
 
 HOST = "127.0.0.1"
 

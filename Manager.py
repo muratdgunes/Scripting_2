@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 
 class Manager(Frame):
     def __init__(self,clientsocket):
@@ -51,18 +52,18 @@ class Manager(Frame):
         Add_frame5 = Frame(add_frame)
         Add_frame5.pack()
 
-        self.Quantity_Label = Label(Add_frame5,text="Quantity: ")
-        self.Quantity_Label.pack(padx=(5,0),pady=5,side=LEFT)
-        self.Quantity_Entry = Entry(Add_frame5,width=40)
-        self.Quantity_Entry.pack(padx=(0,4),pady=5,side=LEFT)
+        self.Price_Label = Label(Add_frame5,text="Price: ")
+        self.Price_Label.pack(padx=(0,2),pady=5,side=LEFT)
+        self.Price_Entry = Entry(Add_frame5,width=40)
+        self.Price_Entry.pack(padx=(17,0),pady=5,side=LEFT)
 
         Add_frame6 = Frame(add_frame)
         Add_frame6.pack()
 
-        self.Price_Label = Label(Add_frame6,text="Price: ")
-        self.Price_Label.pack(padx=(0,2),pady=5,side=LEFT)
-        self.Price_Entry = Entry(Add_frame6,width=40)
-        self.Price_Entry.pack(padx=(17,0),pady=5,side=LEFT)
+        self.Quantity_Label = Label(Add_frame6,text="Quantity: ")
+        self.Quantity_Label.pack(padx=(5,0),pady=5,side=LEFT)
+        self.Quantity_Entry = Entry(Add_frame6,width=40)
+        self.Quantity_Entry.pack(padx=(0,4),pady=5,side=LEFT)
 
         Add_frame7 = Frame(add_frame)
         Add_frame7.pack()
@@ -93,7 +94,7 @@ class Manager(Frame):
         Update_frame3 = Frame(update_frame)
         Update_frame3.pack()
 
-        self.Update_Button = Button(Update_frame3,width=10, text="Update")
+        self.Update_Button = Button(Update_frame3,width=10, text="Update",command = self.Update_ButtonPressed)
         self.Update_Button.pack(padx=(275,0), pady=5, side=LEFT)
 
 
@@ -114,37 +115,81 @@ class Manager(Frame):
         Statistics_frame2 = Frame(Statistics_frame)
         Statistics_frame2.pack(padx=(0,160))
 
-        self.Top_Sellings = Radiobutton(Statistics_frame2, text="Most Profitable Genre", variable=self.statistics_choice,value="Most Profitable Genre")
-        self.Top_Sellings.pack(padx=5, pady=5, side=LEFT)
+        self.Most_Profitable_Genre = Radiobutton(Statistics_frame2, text="Most Profitable Genre", variable=self.statistics_choice,value="Most Profitable Genre")
+        self.Most_Profitable_Genre.pack(padx=5, pady=5, side=LEFT)
 
         Statistics_frame3 = Frame(Statistics_frame)
         Statistics_frame3.pack(padx=(0,195))
 
-        self.Top_Sellings = Radiobutton(Statistics_frame3, text="Busiest Cashier", variable=self.statistics_choice,value="Busiest Cashier")
-        self.Top_Sellings.pack(padx=5, pady=5, side=LEFT)
+        self.Busiest_Cashier = Radiobutton(Statistics_frame3, text="Busiest Cashier", variable=self.statistics_choice,value="Busiest Cashier")
+        self.Busiest_Cashier.pack(padx=5, pady=5, side=LEFT)
 
         Statistics_frame4 = Frame(Statistics_frame)
         Statistics_frame4.pack()
 
-        self.Generate_Button = Button(Statistics_frame4,width=10, text="Generate")
+        self.Generate_Button = Button(Statistics_frame4,width=10, text="Generate", command = self.Generate_ButtonPressed)
         self.Generate_Button.pack(padx=(275,0), pady=5, side=LEFT)
+        
+        CloseeFrame = Frame(self)
+        CloseeFrame .pack()
+        self.Close_Button = Button(CloseeFrame, text="Close",width=10,command= self.Exit)
+        self.Close_Button.pack(padx=5, pady=5, side=LEFT)
 
     def Add_ButtonPressed(self):
         added_book_id = self.bookid_entry.get()
         added_title =  self.title_entry.get()
         added_authors=  self.Authors_Entry.get()
         added_Genre = self.Genre_Entry.get()
+        added_Price = self.Price_Entry.get()
         added_Quantity = self.Quantity_Entry.get()
 
-        new_book =f"addbook;{added_book_id};{added_title};{added_authors},{added_Genre},{added_Quantity}".encode()
+
+        new_book =f"addbook;{added_book_id};{added_title};{added_authors};{added_Genre};{added_Price};{added_Quantity};".encode()
         self.clientsocket.send(new_book)
     
     def Update_ButtonPressed(self):
         updated_book_id = self.update_bookId_entry.get()
         updated_Number_of_Books = self.update_Number_of_books_entry.get()
 
-        updated_book = f"updatequantity;{updated_book_id};{updated_Number_of_Books}"
+        updated_book = f"updatequantity;{updated_book_id};{updated_Number_of_Books}".encode()
         self.clientsocket.send(updated_book)
+
+    def Generate_ButtonPressed(self):
+        generated_statistics = self.statistics_choice.get()
+
+        if (generated_statistics == "Top-Selling Author"):
+            report_code = "report1".encode()
+            self.clientsocket.send(report_code)
+            data = self.clientsocket.recv(1024).decode()
+
+        elif (generated_statistics == "Most Profitable Genre"):
+            report_code = "report2".encode()
+            self.clientsocket.send(report_code)
+            data = self.clientsocket.recv(1024).decode()
+            
+        else:
+            report_code = "report3".encode()
+            
+        self.clientsocket.send(report_code)
+        data = self.clientsocket.recv(1024).decode()
+        parts = data.split(";")
+
+        if parts[0].startswith("report"):
+            if len(parts) == 2:
+                messagebox.showinfo("Statistics Result", parts[1])
+            else:
+                answers = "\n".join(parts[1:])
+                messagebox.showinfo("Statistics Result", answers)
+
+    def Exit(self):
+        msg = "Close".encode()
+        self.clientsocket.send(msg)
+        self.master.destroy()
+
+    
+
+
+
 
 
 

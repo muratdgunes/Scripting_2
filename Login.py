@@ -7,6 +7,7 @@ class Login(Frame):
         Frame.__init__(self)
         self.master.title('Login')  # title koymak için
         self.clientsocket = clientsocket
+        self.role = None
 
         # expandable
         self.master.rowconfigure(0, weight=1) # if it is non zero value it will be expandable
@@ -70,7 +71,7 @@ class Login(Frame):
             else:
                 print("show manager frame-----------")
                 z = Manager(self.clientsocket)
-                z.master.geometry("400x750")
+                z.master.geometry("400x650")
                 z.mainloop()
         else:
             print("Response from server: \"",response,"\" Please try again...")

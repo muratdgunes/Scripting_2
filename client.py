@@ -1,6 +1,6 @@
 from socket import *
 from threading import *
-from Login import Login
+from Login import *
 
 
 HOST = "127.0.0.1"
@@ -14,20 +14,14 @@ while True:
     print("Message received: ", in_data)
     in_data = in_data.split(";")
     print("Parsed message is: ", in_data)
-    #out_data = input("Enter your question: ")
-    #client.send(out_data.encode())
+        #out_data = input("Enter your question: ")
+        #client.send(out_data.encode())
     if in_data[0] == "connectionsuccess":
         print("Successfully connected.")
         c = Login(client)   # LOGIN SCREEN START------
         c.master.geometry("395x210")
         c.mainloop()    # LOGIN SCREEN END------
-
-
-
-        #break
-
     else:
         print("connection failed... try again later")
-        #break
-
+        break
 client.close()
