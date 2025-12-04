@@ -1,5 +1,4 @@
 from tkinter import *
-from tkinter import messagebox
 
 class Cashier(Frame):
     def __init__(self,clientsocket):
