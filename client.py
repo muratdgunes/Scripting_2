@@ -3,7 +3,7 @@ from threading import *
 from Login import *
 
 
-HOST = "127.0.0.1"
+HOST = "10.143.17.186"
 PORT = 5000
 
 client = socket(AF_INET, SOCK_STREAM)

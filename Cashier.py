@@ -1,52 +1,141 @@
 from tkinter import *
+from tkinter import messagebox
+import re
 
 class Cashier(Frame):
     def __init__(self,clientsocket):
         Frame.__init__(self)
-        self.master.title('Transaction')  # title koymak için
-        self.clientsocket = clientsocket
+        self.master.title('Transaction')  # for placing title.
+        self.clientsocket = clientsocket  # initialize client socket
+        self.count = 0
+        self.message = ""
 
-        # expandable
-        self.master.rowconfigure(0, weight=1) # if it is non zero value it will be expandable
-        self.master.columnconfigure(0, weight=1)
+        self.pack()
 
+        self.frame1 = Frame(self) # frame 1 start -------------------------
+        self.frame1.pack(padx=5, pady=25)
 
-        for i in range(0,8):
-            self.rowconfigure(i, weight=1) # we will have just 1 row. Make it expandable
+        self.label = Label(self.frame1, text="Book id: ")
+        self.label.pack(padx=(20,8), pady=5, side=LEFT)
 
-
-
-        for j in range(0,2):
-            self.columnconfigure(j, weight=1) # we have 3 columns, it is to make them expandable
-
-        self.grid(sticky=W + E + N + S) # fill until the walls, have padding 20px everywhere
-
-
-        self.label = Label(self, text="Book id: ")
-        self.label.grid(row=0, column=0, sticky=E+W+S,pady=20) #username
-
-        self.mainEntry = Entry(self, justify=LEFT)
-        self.mainEntry.grid(row=0, column=1, columnspan=3, sticky=W+S,ipady=3,ipadx=52, padx=1,pady=20) #username entry box.
+        self.mainEntry = Entry(self.frame1)
+        self.mainEntry.pack(padx=(5,25), pady=5, side=LEFT,ipadx=70,ipady=3)
+        # frame 1 end --------------------------------------------------------
 
 
 
-        self.label2 = Label(self, text="Quantity: ")
-        self.label2.grid(row=1, column=0, sticky=E+W)
+        self.frame2 = Frame(self) # frame 2 start ---------------------
+        self.frame2.pack(padx=5, pady=5)
 
-        self.mainEntry1 = Entry(self, justify=LEFT)
-        self.mainEntry1.grid(row=1, column=1, columnspan=3, sticky=W, ipady=3,ipadx=52, padx=1)
+        self.label2 = Label(self.frame2, text="Quantity: ")
+        self.label2.pack(padx=(20,5), pady=5, side=LEFT)
+
+        self.mainEntry1 = Entry(self.frame2, justify=LEFT)
+        self.mainEntry1.pack(padx=(5,25), pady=5, side=LEFT, ipadx=70, ipady=3)
+        # frame 2 end -------------------------------------------------
+
+        self.frame3 = Frame(self) # frame 3 start ---------------
+        self.frame3.pack(padx=5, pady=5)
+
+        self.button = Button(self.frame3, text="Add", command = self.add)
+        self.button.pack(ipadx=35,ipady=5, side=TOP,pady=(20,0))
+        # frame 3 end -------------------------------------------
 
 
+        self.frame4 = Frame(self) # frame 4 start -------------------
+        self.frame4.pack(padx=5, pady=5)
 
-        self.button = Button(self, text="Add", command = self.add)
-        self.button.grid(row=2, columnspan=2, sticky=E+W+N, padx=125, pady=125, ipady=30)
+        self.label3 = Label(self.frame4, text="Books Added:")
+        self.label3.pack(padx=25, pady=(25,0), side=LEFT)
+        # frame 4 end -----------------------------------------------
 
-        self.label3 = Label(self, text="Books Added:")
-        self.label3.grid(row=3, sticky=W+E+N, columnspan=3)
 
-        self.mainEntry1 = Entry(self, justify=LEFT)
-        self.mainEntry1.grid(row=4, columnspan=2, sticky=W+E, ipady=80, padx=40, pady=40)
+        self.frame5 = Frame(self) # frame 5 start -----------------------
+        self.frame5.pack(padx=5, pady=5)
+
+        self.mainEntry3 = Listbox(self.frame5) # listbox is used because it automatically formats. And it is easy to read from.
+        self.mainEntry3.pack(padx=5, pady=5, side=LEFT, ipadx=82)
+        # frame 5 end ---------------------------------------------------
+
+
+        self.frame6 = Frame(self) # frame 6 start --------------------
+        self.frame6.pack(padx=5, pady=5)
+
+        self.label4 = Label(self.frame6, text="Discount Code: ")
+        self.label4.pack(padx=(20,3), pady=(5,25), side=LEFT)
+
+        self.mainEntry4 = Entry(self.frame6, justify=LEFT)
+        self.mainEntry4.pack(padx=(5,25), pady=(5,25), side=LEFT, ipadx=55, ipady=3)
+        # frame 6 end ------------------------------------------------
+
+
+        self.frame7 = Frame(self) # frame 7 start --------------------
+        self.frame7.pack(padx=5, pady=5)
+
+        self.button1 = Button(self.frame7, text="Close")
+        self.button1.pack(padx=(60,0),pady=(3,20),side=LEFT,ipadx=35,ipady=5)
+
+        self.button2 = Button(self.frame7, text="Complete Transaction", command=self.complete)
+        self.button2.pack(padx=20, side=LEFT, ipadx=35,ipady=5,pady=(3,20))
+        # frame 7 end ------------------------------------------------
 
 
     def add(self):
         print("hi")
+        book_id = self.mainEntry.get()
+        quantity = self.mainEntry1.get()
+
+        self.mainEntry3.insert(END, f"{book_id}-{quantity}\n")
+        self.count+=1
+
+    def complete(self):
+        i=0
+        message_to_be_sent ="transaction;"
+        temp =""
+
+        discount = self.mainEntry4.get()
+
+        if discount != "":
+            message_to_be_sent += discount
+
+        while self.count > i:
+            line = self.mainEntry3.get(first=i)
+
+            if line not in temp:
+                if line =="":
+                    break
+                else:
+                    temp += line
+            i+=1
+
+        temp = temp.split("\n") # split the message received from listbox.
+        print("temp is:",temp)
+
+        for each in temp:   # check if item is in needed format. Ex: "1001-2" , "1002-5"
+            print("each is:",each)
+            if each == "":
+                continue
+            print("after:",each)
+            message_to_be_sent += f";{each}"
+
+        self.count = 0 # reset the counter that counts listbox items.
+        self.mainEntry.delete(0, END)
+        self.mainEntry1.delete(0, END)
+        self.mainEntry3.delete(0, END)
+        self.mainEntry4.delete(0, END)
+
+        print("msg to be sent is: ",message_to_be_sent)
+        msg = message_to_be_sent.encode()
+        self.clientsocket.send(msg)
+
+        data = self.clientsocket.recv(1024).decode()
+        data = data.split(";")
+        print("received data fron server in cashier is: ",data)
+        if data[0] == "transactionfailure":
+            messagebox.showinfo("Transaction Failure", data[1])
+
+        elif data[0] == "transactionconfirmation":
+            messagebox.showinfo("Successful Transaction", "Total price is: "+data[1])
+
+
+

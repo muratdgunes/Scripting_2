@@ -7,7 +7,6 @@ class Login(Frame):
         Frame.__init__(self)
         self.master.title('Login')  # title koymak için
         self.clientsocket = clientsocket
-        self.role = None
 
         # expandable
         self.master.rowconfigure(0, weight=1) # if it is non zero value it will be expandable
@@ -34,9 +33,10 @@ class Login(Frame):
 
 
         self.label2 = Label(self, text="Password:")
+
         self.label2.grid(row=1, column=0, sticky=E+W)
 
-        self.mainEntry1 = Entry(self, justify=LEFT)
+        self.mainEntry1 = Entry(self, justify=LEFT,show="*")
         self.mainEntry1.grid(row=1, column=1, columnspan=3, sticky=W, ipady=3,ipadx=52, padx=1)
 
 
@@ -56,17 +56,13 @@ class Login(Frame):
 
         response = self.clientsocket.recv(1024).decode() #wait for server response
 
-        response = response.split(";") # parse response
+        response = response.split(";") # parse the server login response
         if response[0] == "loginsuccess":
-            print(response)
             messagebox.showinfo("Login Successful",f"Login successful, Welcome {response[1]}")
-            self.master.destroy()
+            self.master.destroy() # upon successful login, destroy login GUI.
 
-            #roleUser = userDictionary[response[1]]["role"] dont do this, negative marks security concerns
-
-            if response[2] == "Cashier":
+            if response[2] == "Cashier": # if login response contains cashier, show Cashier GUI.
                 z = Cashier(self.clientsocket)
-                z.master.geometry("400x750")
                 z.mainloop()
             else:
                 print("show manager frame-----------")
