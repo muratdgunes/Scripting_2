@@ -146,6 +146,14 @@ class Manager(Frame):
 
         new_book =f"addbook;{added_book_id};{added_title};{added_authors};{added_Genre};{added_Price};{added_Quantity};".encode()
         self.clientsocket.send(new_book)
+
+        response = self.clientsocket.recv(1024).decode()
+
+        if response == "addbookconfirmation":
+            messagebox.showinfo("Book Information","New book successfully added to the system")
+        
+        else:
+            messagebox.showinfo("Book Information","Wrong entry please re-enter with a correct format")
     
     def Update_ButtonPressed(self):
         updated_book_id = self.update_bookId_entry.get()
@@ -153,6 +161,18 @@ class Manager(Frame):
 
         updated_book = f"updatequantity;{updated_book_id};{updated_Number_of_Books}".encode()
         self.clientsocket.send(updated_book)
+
+        res = self.clientsocket.recv(1024).decode()
+
+        if res == "updatequantityconfirmation":
+            messagebox.showinfo("Book Information",f"{updated_book_id} quantity has been updated")
+        
+        elif res == "updatequantityfailed":
+            messagebox.showinfo("Book Information",f"There is no such a book with id : {updated_book_id}")
+
+        elif res == "type":
+             messagebox.showinfo("Book Information","Wrong entry please re-enter with a correct format")
+        
 
     def Generate_ButtonPressed(self):
         generated_statistics = self.statistics_choice.get()

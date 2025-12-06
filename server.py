@@ -166,41 +166,58 @@ class ClientThread(Thread):
                 price = parsed_data[5]
                 quantity =parsed_data[6]
 
-                with open("inventory.txt","a", encoding="utf-8") as file:
-                    file.write(f"\n{book_id};{title};{authors};{genre};{price};{quantity}")
+                line = f"{book_id};{title};{authors};{genre};{price};{quantity}"
+                pattern = re.compile("^[0-9]{4};[A-Za-z0-9 '-.:]+;[a-zA-Z. ]+;[A-Za-z- ]+;[0-9., ]+;[0-9]+$")
+                matched = re.match(pattern,line)
+                if not matched:
+                    clientsocket.send("Wrong Entry".encode())
+                if  matched :
+                    with open("inventory.txt","a", encoding="utf-8") as file:
+                        file.write(f"\n{book_id};{title};{authors};{genre};{price};{quantity}")
             
-                clientsocket.send("addbookconfirmation".encode())
+                    clientsocket.send("addbookconfirmation".encode())
    
             elif parsed_data[0] == "updatequantity":
                 book_id = parsed_data[1]
                 new_quantitiy = parsed_data[2]
 
-                updated_line = []
-                found = False
+                temp = f"{book_id};{new_quantitiy}"
 
-                with open("inventory.txt","r", encoding="utf-8") as file:
-                    for line in file:
-                        fields = line.strip().split(";")
+                pattern = re.compile("^[0-9]{4};[0-9]+$")
+                check = re.match(pattern,temp)
 
-                        if(fields[0]==book_id):
-                            fields[5] = str(int(fields[5]) + int(new_quantitiy))
-                            found = True
+                if not check:
+                    clientsocket.send("type".encode())
 
-                        updated_line.append(";".join(fields))
-                with open("inventory.txt","w", encoding="utf-8") as file:
-                    index = 0
-                    total = len(updated_line)
-                    for line in updated_line:
-                        if index<total -1:
-                            file.write(line + "\n")
-                        else:
-                            file.write(line)
-                        index +=1
+                if check:    
 
-                if found:
-                    clientsocket.send("updatequantityconfirmation".encode())
-                else:
-                    clientsocket.send("updatequantityfailed".encode())
+                    updated_line = []
+                    found = False
+
+                    with open("inventory.txt","r", encoding="utf-8") as file:
+                        for line in file:
+                            fields = line.strip().split(";")
+
+                            if(fields[0]==book_id):
+                                fields[5] = str(int(fields[5]) + int(new_quantitiy))
+                                found = True
+
+                            updated_line.append(";".join(fields))
+                    with open("inventory.txt","w", encoding="utf-8") as file:
+                        index = 0
+                        total = len(updated_line)
+                        for line in updated_line:
+                            if index<total -1:
+                                file.write(line + "\n")
+                            else:
+                                file.write(line)
+                            index +=1
+
+                    if found:
+                        clientsocket.send("updatequantityconfirmation".encode())
+                    else:
+                        clientsocket.send("updatequantityfailed".encode())
+                
 
 
             
@@ -209,13 +226,14 @@ class ClientThread(Thread):
                 reponse ="report1;" + ";".join(results)
                 clientsocket.send(reponse.encode())
             elif parsed_data[0] == "report2":
-                results = ClientThread.compute_most_profitable_genre()
+                results = self.compute_most_profitable_genre()
                 clientsocket.send(("report2;"+ ";".join(results)).encode())
             elif parsed_data[0] == "report3":
-                results = ClientThread.compute_busiest_cashier()
+                results = self.compute_busiest_cashier()
                 clientsocket.send(("report3;"+";".join(results)).encode())
         
-            elif parsed_data[0] == "closeconnection":
+
+            elif parsed_data[0] == "Close":
                 self.clientsocket.close()
                 break
 
@@ -250,12 +268,45 @@ class ClientThread(Thread):
         result = [a for a in book_to_authors if book_to_authors[a] == Top_sell]
         return result
 
-    @staticmethod
-    def compute_most_profitable_genre():
-            book_info = {}
+    
+    def compute_most_profitable_genre(self):
+        genres = {}
+        prices = {}
+        prof = {}
 
-    @staticmethod
-    def compute_busiest_cashier():
+        with open("inventory.txt", "r", encoding="utf-8") as file:
+            for line in file:
+                fields = line.strip().split(";")
+                bookid = fields[0]
+                genre = fields[3]
+                price = float(fields[4])
+
+                genres[bookid] = genre
+                prices[bookid] = price      
+                
+        with open("transactions.txt", "r", encoding="utf-8") as file:
+            for line in file:
+                parts = line.strip().split(";")
+
+                for item in parts[4:]:
+                    bookid, quantity = item.split("-")
+                    quantity = int(quantity)
+                    
+                    
+                    genre = genres[bookid]
+                    price = prices[bookid]
+
+                    profit = quantity * price
+
+                    prof[genre] = prof.get(genre,0) + profit
+                    
+
+            profitable = max(prof.values())
+            result = [a for a in prof if prof[a]== profitable]
+            return result     
+
+    
+    def compute_busiest_cashier(self):
 
         cashier_counts = {}  
 
