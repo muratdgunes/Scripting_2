@@ -18,3 +18,4 @@
 1018;The Glass Ocean;Beatriz Williams and Lauren Willig and Karen White;Fiction;13.50;4
 1019;The Legacy of Heorot;Larry Niven and Jerry Pournelle and Steven Barnes;Science Fiction;15.25;7
 1020;Ask A Policeman;Dorothy L. Sayers and Milward Kennedy and Anthony Berkeley;Mystery;9.00;5
+101;Intro;Berkay Ceylan et al.;Science;19.99;50

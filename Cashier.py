@@ -83,7 +83,6 @@ class Cashier(Frame):
         self.clientsocket.close()
 
     def add(self):
-        print("hi")
         book_id = self.mainEntry.get()
         quantity = self.mainEntry1.get()
 
