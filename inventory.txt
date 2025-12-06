@@ -8,8 +8,8 @@
 1008;Educated: A Memoir;Tara Westover;Biography;17.99;3
 1009;A Storm of Swords;George R. R. Martin;Fantasy;11.25;22
 1010;The Whole-Brain Child;Daniel J. Siegel and Tina Payne Bryson;Self-Help;13.00;9
-1011;Where the Crawdads Sing;Delia Owens;Mystery;10.50;53
-1012;One Hundred Years of Solitude;Gabriel Garcia Marquez;Literary Fiction;16.75;4
+1011;Where the Crawdads Sing;Delia Owens;Mystery;10.50;5
+1012;One Hundred Years of Solitude;Gabriel Garcia Marquez;Literary Fiction;16.75;1
 1013;The Hunger Games;Suzanne Collins;Young Adult;8.99;14
 1014;Thinking, Fast and Slow;Daniel Kahneman;Psychology;20.00;7
 1015;Good Omens;Terry Pratchett and Neil Gaiman;Fantasy;12.00;16

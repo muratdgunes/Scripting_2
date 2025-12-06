@@ -1,6 +1,5 @@
 from tkinter import *
 from tkinter import messagebox
-import re
 
 class Cashier(Frame):
     def __init__(self,clientsocket):
@@ -8,7 +7,6 @@ class Cashier(Frame):
         self.master.title('Transaction')  # for placing title.
         self.clientsocket = clientsocket  # initialize client socket
         self.count = 0
-        self.message = ""
 
         self.pack()
 
@@ -72,50 +70,55 @@ class Cashier(Frame):
         self.frame7 = Frame(self) # frame 7 start --------------------
         self.frame7.pack(padx=5, pady=5)
 
-        self.button1 = Button(self.frame7, text="Close")
+        self.button1 = Button(self.frame7, text="Close", command=self.close)
         self.button1.pack(padx=(60,0),pady=(3,20),side=LEFT,ipadx=35,ipady=5)
 
         self.button2 = Button(self.frame7, text="Complete Transaction", command=self.complete)
         self.button2.pack(padx=20, side=LEFT, ipadx=35,ipady=5,pady=(3,20))
         # frame 7 end ------------------------------------------------
 
+    def close(self):
+
+        self.master.destroy()
+        self.clientsocket.close()
 
     def add(self):
         print("hi")
         book_id = self.mainEntry.get()
         quantity = self.mainEntry1.get()
 
+        self.mainEntry.delete(0,END)
+        self.mainEntry1.delete(0,END)
+
         self.mainEntry3.insert(END, f"{book_id}-{quantity}\n")
-        self.count+=1
+        self.count+=1   # every time an item is added, increase the count.
 
     def complete(self):
         i=0
         message_to_be_sent ="transaction;"
         temp =""
 
-        discount = self.mainEntry4.get()
+        discount = self.mainEntry4.get() # get the discount code entry.
 
-        if discount != "":
+        if discount != "":  # if discount entry is filled, also add it to the message to be sent to server.
             message_to_be_sent += discount
 
-        while self.count > i:
-            line = self.mainEntry3.get(first=i)
+        while self.count > i: # iterate until all items are processed.
+            line = self.mainEntry3.get(first=i) # read the listbox.
 
-            if line not in temp:
+            if line not in temp: # parse the data read from the listbox.
                 if line =="":
-                    break
+                    break   # reading from listbox resulted in an extra item which is "". This line will discard that.
                 else:
                     temp += line
             i+=1
 
         temp = temp.split("\n") # split the message received from listbox.
-        print("temp is:",temp)
 
         for each in temp:   # check if item is in needed format. Ex: "1001-2" , "1002-5"
-            print("each is:",each)
             if each == "":
-                continue
-            print("after:",each)
+                continue   # to not add newline character to "message_to_be_sent" which will be sent to server.
+
             message_to_be_sent += f";{each}"
 
         self.count = 0 # reset the counter that counts listbox items.
@@ -124,13 +127,14 @@ class Cashier(Frame):
         self.mainEntry3.delete(0, END)
         self.mainEntry4.delete(0, END)
 
-        print("msg to be sent is: ",message_to_be_sent)
+        print("Cashier>>",message_to_be_sent)
         msg = message_to_be_sent.encode()
-        self.clientsocket.send(msg)
+        self.clientsocket.send(msg) # send the transaction details to the server
 
-        data = self.clientsocket.recv(1024).decode()
-        data = data.split(";")
-        print("received data fron server in cashier is: ",data)
+        data = self.clientsocket.recv(1024).decode() # wait for response from the server
+        print("Server>>",data)
+        data = data.split(";") # parse the response
+
         if data[0] == "transactionfailure":
             messagebox.showinfo("Transaction Failure", data[1])
 

@@ -182,7 +182,7 @@ class Manager(Frame):
                 messagebox.showinfo("Statistics Result", answers)
 
     def Exit(self):
-        msg = "Close".encode()
+        msg = "closeconnection".encode()
         self.clientsocket.send(msg)
         self.master.destroy()
 
